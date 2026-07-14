@@ -51,6 +51,22 @@ describe('ClaimDetailScreen', () => {
     expect(screen.getByText('Payments')).toBeTruthy();
   });
 
+  it('does not record (or crash) when the payment exceeds the outstanding balance', async () => {
+    const { state, claimId } = stateWith('approved'); // approved ₦1,000, nothing paid
+    await render(
+      <StoreProvider preloadedState={state}>
+        <ClaimDetailScreen claimId={claimId} onBack={() => {}} />
+      </StoreProvider>,
+    );
+    await fireEvent.changeText(screen.getByLabelText('Payment amount'), '99999999');
+    await fireEvent.press(screen.getByLabelText('Record payment'));
+    // Guarded before dispatch: status stays approved and no payment is recorded (no crash).
+    // "Approved" appears twice (status badge + summary row); the payment input remains.
+    expect(screen.getAllByText('Approved').length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByLabelText('Payment amount')).toBeTruthy();
+    expect(screen.queryByText('Payments')).toBeNull();
+  });
+
   it('calls onBack when the back control is pressed', async () => {
     const { state, claimId } = stateWith('submitted');
     const onBack = jest.fn();

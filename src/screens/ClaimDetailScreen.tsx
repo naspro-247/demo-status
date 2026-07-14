@@ -60,10 +60,15 @@ export function ClaimDetailScreen({ claimId, onBack }: { claimId: string; onBack
       Alert.alert('Invalid amount', 'Enter a positive payment amount.');
       return;
     }
-    run(() => {
-      dispatch({ type: 'RECORD_PAYMENT', claimId, amount });
-      setPaymentInput('');
-    });
+    if (amount > outstandingBalance(claim)) {
+      Alert.alert(
+        'Amount too high',
+        `Payment cannot exceed the outstanding balance of ${formatMoney(outstandingBalance(claim))}.`,
+      );
+      return;
+    }
+    dispatch({ type: 'RECORD_PAYMENT', claimId, amount });
+    setPaymentInput('');
   };
 
   return (
